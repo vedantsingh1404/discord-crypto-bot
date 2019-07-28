@@ -9,6 +9,7 @@ const auth = require('./auth.json');
 const discord = require('discord.js');
 const cron = require('node-cron');
 const fs = require('fs');
+const meta = require('./meta.json');
 
 
 client = new discord.Client();
@@ -29,7 +30,7 @@ client.on('error', (err) => {
 
 // auto update
 
-var task = cron.schedule('*/1 * * * *', () => {
+var task = cron.schedule('*/5 * * * *', () => {
 	var options = {
 		"method" : "GET",
 		"url" : "https://api.coincap.io/v2/assets?limit=10",
@@ -53,14 +54,51 @@ var task = cron.schedule('*/1 * * * *', () => {
 			channel.send('---------------------------------');
 		}
 	});
-
-
 });
 
 task.start();
 
 // commands
 
+client.on('message', (message) => {
+	if(!message.guild) return;
+
+	var args = message.content.split(' ');
+
+	if (message.content.toLowerCase().startsWith('yo')) {
+		var cmd = args[1].toLowerCase();
+
+		switch(cmd) {
+			case 'symbol' :
+				var name_arr = args.slice(2,);
+				var name = name_arr.join(' ');
+
+				const index = meta.findIndex((metadata, index) => {
+					return metadata.name.toLowerCase() === name.toLowerCase();
+				});
+
+				const symb = meta[index].asset_id;
+
+				message.reply(`The symbol of ${name} is ${symb}`);
+
+				break;
+
+			case 'name' :
+				var symb2 = args[2];
+
+				const index2 = meta.findIndex((metadata, index2) => {
+					return metadata.asset_id.toLowerCase() === symb2.toLowerCase();
+				});
+
+				const name2 = meta[index2].name;
+
+				message.reply(`The name of ${symb2} is ${name2}`);
+
+				break;
+
+		}
+	}
+});
 
 
 // logging
