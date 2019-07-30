@@ -10,7 +10,7 @@ Each command start with the keyword __yo__
 
 * symbol [currency_name]
 
-   Returns the symbol (ISO 4217) of the specified currency.
+   Returns the code (ISO 4217) of the specified currency.
 
 * name [currency_code]
 
