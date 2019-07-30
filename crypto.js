@@ -1,4 +1,4 @@
-//jshint esversion: 6
+//jshint esversion: 8
 
 process.on('unhandledRejection', error => {
 	console.error(error.stack);
@@ -48,7 +48,7 @@ var task = cron.schedule('*/5 * * * *', () => {
 
 			for(var i = 0;i < 10;i++) {
 				curr_data = data.data[i];
-				channel.send(`1 ${curr_data.symbol} = $ ${curr_data.priceUsd}`);
+				channel.send(`1 ${curr_data.symbol} = ${curr_data.priceUsd} USD`);
 			}
 
 			channel.send('---------------------------------');
@@ -96,7 +96,123 @@ client.on('message', (message) => {
 
 				break;
 
-		}
+			case 'price' :
+
+				var curr1 = args[2].toUpperCase();
+				var curr2 = args[3].toUpperCase();
+
+				const index3 = meta.findIndex((metadata, index3) => {
+					return metadata.asset_id.toLowerCase() === curr1.toLowerCase();
+				});
+
+				const index4 = meta.findIndex((metadata, index4) => {
+					return metadata.asset_id.toLowerCase() === curr2.toLowerCase();
+				});
+
+				if(meta[index3].type_is_crypto === 1 && meta[index4].type_is_crypto === 0) {
+
+					var options_price = {
+						"method" : "GET",
+						"url" : "https://apiv2.bitcoinaverage.com/indices/global/ticker/" + curr1 + curr2
+					};
+
+					request(options_price, (err, res, body) => {
+						if(err) {
+							console.log(err);
+						} else {
+							var data = JSON.parse(body);
+
+							var rate = data.last;
+
+							message.reply(`1 ${curr1} = ${rate} ${curr2}`);
+						}
+					});
+
+				} else if (meta[index3].type_is_crypto === 1 && meta[index4].type_is_crypto === 1) {
+
+					var options_price_1 = {
+						"method" : "GET",
+						"url" : "https://apiv2.bitcoinaverage.com/indices/global/ticker/" + curr1 + "USD"
+					};
+
+					request(options_price_1, (err, res, body) => {
+						if(err) {
+							console.log(err);
+						} else {
+							data = JSON.parse(body);
+
+							var options_price_2 = {
+								"method" : "GET",
+								"url" : "https://apiv2.bitcoinaverage.com/indices/global/ticker/" + curr2 + "USD"
+							};
+
+							request(options_price_2, (err2, res2, body2) => {
+								if(err) {
+									console.log(err);
+								} else {
+									data2 = JSON.parse(body2);
+
+									rate = data.last / data2.last;
+
+									message.reply(`1 ${curr1} = ${rate} ${curr2}`);
+								}
+							});
+						}
+					});
+
+				} else if (meta[index3].type_is_crypto === 0 && meta[index4].type_is_crypto === 0) {
+
+					var options_price_1 = {
+						"method" : "GET",
+						"url" : "https://apiv2.bitcoinaverage.com/indices/global/ticker/BTC" + curr1
+					};
+
+					request(options_price_1, (err, res, body) => {
+						if(err) {
+							console.log(err);
+						} else {
+							data = JSON.parse(body);
+
+							var options_price_2 = {
+								"method" : "GET",
+								"url" : "https://apiv2.bitcoinaverage.com/indices/global/ticker/BTC" + curr2
+							};
+
+							request(options_price_2, (err2, res2, body2) => {
+								if(err) {
+									console.log(err);
+								} else {
+									data2 = JSON.parse(body2);
+
+									rate = data2.last / data.last;
+
+									message.reply(`1 ${curr1} = ${rate} ${curr2}`);
+								}
+							});
+						}
+					});
+
+				} else if (meta[index3].type_is_crypto === 0 && meta[index4].type_is_crypto === 1) {
+
+					var options_price = {
+						"method" : "GET",
+						"url" : "https://apiv2.bitcoinaverage.com/indices/global/ticker/" + curr2 + curr1
+					};
+
+					request(options_price, (err, res, body) => {
+						if(err) {
+							console.log(err);
+						} else {
+							var data = JSON.parse(body);
+
+							var rate = 1 / data.last;
+
+							message.reply(`1 ${curr1} = ${rate} ${curr2}`);
+						}
+					});
+
+				}
+			}
 	}
 });
 
